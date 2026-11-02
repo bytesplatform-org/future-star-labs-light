@@ -1,26 +1,272 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------
+   Future Star Labs — design tokens
+   Palette drawn from the helix mark: deep navy strand + cyan strand,
+   set on a cool laboratory paper.
+------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f3f2ee;
+  --paper-2: #e9e8e2;
+  --ink: #0b1b3a;
+  --ink-2: #1d2c4c;
+  --muted: #5a6478;
+  --line: rgb(11 27 58 / 0.14);
+  --line-strong: rgb(11 27 58 / 0.32);
+  --cyan: #3aa6c8;
+  --cyan-soft: #8fd0e3;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --gutter: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 2.5rem;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --gutter: 3.5rem;
+  }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-cyan: var(--cyan);
+  --color-cyan-soft: var(--cyan-soft);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --ease-out-expo: var(--ease-out);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ------------------------------------------------------------------ base */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 5rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1680px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Display serif — optical sizing on, tight leading */
+.display {
+  font-family: var(--font-serif);
+  font-feature-settings: normal;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+}
+.display em,
+.serif-italic {
+  font-style: italic;
+  font-weight: 300;
+}
+
+/* Small mono metadata label */
+.meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+/* Underline link that draws in on hover */
+.link-line {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.6s var(--ease-out);
+}
+.link-line:hover,
+.link-line:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Arrow that nudges on parent hover */
+.arrow {
+  display: inline-block;
+  transition: transform 0.5s var(--ease-out);
+}
+.group:hover .arrow,
+a:hover > .arrow,
+a:focus-visible > .arrow {
+  transform: translate(0.25em, -0.25em);
+}
+
+/* ------------------------------------------------------------------
+   Motion system. Elements opt in with data attributes; a single
+   observer (components/motion.tsx) sets data-in / --p / --y.
+   Hidden states only apply when JS is running (html.js).
+------------------------------------------------------------------- */
+
+/* Hero line rise — runs on load, no JS required */
+@keyframes rise {
+  from {
+    transform: translate3d(0, 105%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.line-mask > span {
+  display: block;
+  animation: rise 1.25s var(--ease-out) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 120ms);
+}
+.fade-in {
+  animation: fade 1.2s var(--ease-out) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 400ms);
+}
+
+/* Fade + lift */
+html.js [data-reveal="up"] {
+  opacity: 0;
+  transform: translate3d(0, 2.25rem, 0);
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1.2s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+html.js [data-reveal="up"][data-in] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Masked line rise for headings revealed on scroll */
+html.js [data-reveal="lines"] .line-mask > span {
+  animation: none;
+  transform: translate3d(0, 105%, 0);
+  transition: transform 1.2s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+html.js [data-reveal="lines"][data-in] .line-mask > span {
+  transform: none;
+}
+
+/* Image curtain — clip from the bottom edge, image settles from scale */
+html.js [data-reveal="image"] {
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 1.5s var(--ease-in-out);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+html.js [data-reveal="image"] img {
+  transform: scale(1.18);
+  transition: transform 2.2s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+html.js [data-reveal="image"][data-in] {
+  clip-path: inset(0 0 0 0);
+}
+html.js [data-reveal="image"][data-in] img {
+  transform: scale(1);
+}
+
+/* Hairline that draws across */
+html.js [data-reveal="rule"] {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.4s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+html.js [data-reveal="rule"][data-in] {
+  transform: none;
+}
+
+/* Scroll-linked word illumination: container gets --p (0..1) */
+.words .w {
+  opacity: clamp(0.14, calc((var(--p, 1) * (var(--n) + 6)) - var(--i)), 1);
+  transition: opacity 0.25s linear;
+}
+
+/* Parallax — transform supplied by the observer as --y */
+[data-parallax] {
+  transform: translate3d(0, var(--y, 0px), 0);
+  will-change: transform;
+}
+
+/* Bars in the talent section grow when revealed */
+html.js [data-reveal="bars"] .bar {
+  transform: scaleX(0);
+}
+[data-reveal="bars"] .bar {
+  transform-origin: left;
+  transition: transform 1.6s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+html.js [data-reveal="bars"][data-in] .bar {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .words .w {
+    opacity: 1;
+  }
+  [data-parallax] {
+    transform: none;
+  }
+}
+
+@keyframes scrollcue {
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(200%); }
 }
